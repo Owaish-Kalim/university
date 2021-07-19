@@ -1,25 +1,51 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useMemo } from 'react'
+import Select from 'react-select'
+import countryList from 'react-select-country-list'
+import Pagination from './components/pagination';
+const axios = require('axios');
+
+const url = 'http://universities.hipolabs.com/search?country='
 
 function App() {
+  const [value, setValue] = useState('')
+  const [resp, setResp] = useState([]);
+  const options = useMemo(() => countryList().getData(), []) 
+
+  const changeHandler = value => { 
+    console.log(`Option selected:`, value.label) ;  
+    resp.splice(0, resp.length)    
+    var x = '' ;
+
+    for (var i = 0; i < value.label.length; i++) 
+    if(value.label[i] === ' ') x += '+' ; 
+    else x += value.label[i] ;
+
+    const uri = url + x
+
+    axios.get(uri)
+    .then(function (response) { 
+      var temp = resp.concat(response.data) 
+      setResp(temp) ; 
+    })
+    .catch(function (error) {
+      console.log(error);
+    }) ;
+    setValue(value) 
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>  
+      <div> 
+        <h2 style={{textAlign:'center'}}> Countrywise Universities list with its domains </h2>
+      </div>
+     {value === '' ? (<h1 style={{textAlign:'center'}}> Select a Country </h1>) : ''}
+      <Select options={options} value={value} onChange={changeHandler} />
+      {value !== '' ? (<h1 style={{textAlign:'center'}}> Country : {value.label} </h1>) : ''} 
+      {value !== '' && resp.length === 0 && <h2 style={{textAlign:'center'}}> No Results Found </h2>}
+      {resp.length !== 0 &&  <Pagination data = {resp} /> }
     </div>
-  );
+  )
+  
 }
 
-export default App;
+export default App
